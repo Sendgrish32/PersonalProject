@@ -109,7 +109,7 @@ while running:
   # Шар
   pygame.draw.circle(screen, color, circle_pos, circle_rad)
 
-  # Пол
+  
   pygame.draw.rect(screen, (10, 10, 10), (0, 700, 1000, 50))
 
   pygame.display.flip()
