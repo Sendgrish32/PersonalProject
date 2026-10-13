@@ -1,0 +1,8 @@
+# Временные папки сборщика exe
+build/
+dist/
+*.spec
+
+# Кэш Python
+__pycache__/
+*.pyc
