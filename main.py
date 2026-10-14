@@ -12,12 +12,12 @@ font = pygame.font.SysFont("arial", 18, bold=True)
 
 
 circle_pos = pygame.Vector2(400, 300)
-circle_vel = pygame.Vector2(0, 0)  # Вектор скорости (Vx, Vy)
+circle_vel = pygame.Vector2(0, 0)  # Вектор скорости
 circle_rad = 50
 color = (50, 50, 50)
 
-g = 980  # Ускорение свободного падения (в пикселях/сек²)
-bounce = 0.75  # Коэффициент упругости (сохраняется 75% скорости)
+g = 980  # Ускорение свободного падения
+bounce = 0.75  # Коэффициент упругости
 gravity = False
 
 # --- ИНТЕРФЕЙС И СОСТОЯНИЯ ---
@@ -36,17 +36,17 @@ while running:
     if event.type == pygame.QUIT:
       running = False
 
-    elif event.type == pygame.MOUSEBUTTONDOWN:
+    elif event.type == pygame.MOUSEBUTTONDOWN: #нажатие ЛКМ
       if event.button == 1:
         mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
 
-        if mouse_pos.distance_to(circle_pos) <= circle_rad:
+        if mouse_pos.distance_to(circle_pos) <= circle_rad: #взаимодействие с шаром
           color = (70, 70, 70)
           is_dragged = True
           circle_vel = pygame.Vector2(0, 0)
           prev_mouse_pos = mouse_pos.copy()
 
-        if rect.collidepoint(mouse_pos):
+        if rect.collidepoint(mouse_pos): #нажатие кнопки гравитации
           gravity = not gravity
           ButCol = (0, 150, 0) if gravity else (100, 100, 100)
 
@@ -95,6 +95,9 @@ while running:
     elif circle_pos.x + circle_rad >= width:
       circle_pos.x = width - circle_rad
       circle_vel.x = -circle_vel.x * bounce
+    # --- СКОРОСТЬ ШАРА ---
+    circle_speed_sqrt = circle_vel.x**2 + circle_vel.y**2
+    circle_speed = circle_speed_sqrt ** 0.5
 
   # 3. ОТРИСОВКА
   screen.fill((30, 30, 30))
@@ -111,6 +114,8 @@ while running:
 
   
   pygame.draw.rect(screen, (10, 10, 10), (0, 700, 1000, 50))
+  print(circle_vel, f" --- speed: {circle_speed}", " "*20, end = "\r", flush=True)
+  
 
   pygame.display.flip()
 
