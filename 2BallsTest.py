@@ -29,9 +29,6 @@ FPS = 60
 
 #---counts---
 font = pygame.font.SysFont("arial", 18, bold=True)
-circle_pos = pygame.Vector2(400, 300)
-circle_vel = pygame.Vector2(0, 0)  # Вектор скорости
-circle_rad = 50
 g = 980  # Ускорение свободного падения
 bounce = 0.75  # Коэффициент упругости
 gravity = False
@@ -71,12 +68,6 @@ while running:
             ball["is_dragged"] = True
             ball["vel"] = pygame.Vector2(0, 0)
             prev_mouse_pos = mouse_pos.copy()
-        '''
-        if mouse_pos.distance_to(circle_pos) <= circle_rad: #взаимодействие c шаром
-          color = (70, 70, 70)
-          is_dragged = True
-          circle_vel = pygame.Vector2(0, 0)
-          prev_mouse_pos = mouse_pos.copy()'''
 
         if GBut.collidepoint(mouse_pos): #нажатие кнопки гравитации
           gravity = not gravity
@@ -95,48 +86,43 @@ while running:
                 if dt > 0:
                     ball["vel"] = (mouse_pos - prev_mouse_pos) / dt
 
-        '''if is_dragged:
-          is_dragged = False
-          mouse_pos = pygame.Vector2(event.pos)
-          # Расчет начальной скорости при броске (v = ds / dt)
-          if dt > 0:
-            circle_vel = (mouse_pos - prev_mouse_pos) / dt'''
-
     elif event.type == pygame.MOUSEMOTION:
-      if is_dragged:
-        prev_mouse_pos = circle_pos.copy()
-        circle_pos = pygame.Vector2(event.pos)
+      for ball in balls.values():
+        if ball["is_dragged"]:
+          prev_mouse_pos = ball["pos"].copy()
+          ball["pos"] = pygame.Vector2(event.pos)
 
   # 2. ФИЗИКА И ЛОГИКА (Работает, пока шар не перетаскивают мышью)
-  if not is_dragged:
-    if gravity:
-      circle_vel.y += g * dt
-    circle_pos += circle_vel * dt
+  for ball in balls.values():
+    if not ball["is_dragged"]:
+      if gravity:
+        ball["vel"].y += g * dt
+      ball["pos"] += ball["vel"] * dt
 
-    # --- ОТСКОК ОТ ПОЛА (Y = 700) ---
-    if circle_pos.y + circle_rad >= 700:
-      circle_pos.y = 700 - circle_rad
-      circle_vel.y = -circle_vel.y * bounce
-      if abs(circle_vel.y) < 15:
-        circle_vel.y = 0
+      # --- ОТСКОК ОТ ПОЛА (Y = 700) ---
+      if ball["pos"].y + ball["radius"] >= 700:
+        ball["pos"].y = 700 - ball["radius"]
+        ball["vel"].y = -ball["vel"].y * bounce
+        if abs(ball["vel"].y) < 15:
+          ball["vel"].y = 0
 
-    # --- ОТСКОК ОТ ПОТОЛКА (Y = 0) ---
-    if circle_pos.y - circle_rad <= 0:
-      circle_pos.y = circle_rad
-      circle_vel.y = -circle_vel.y * bounce
+      # --- ОТСКОК ОТ ПОТОЛКА (Y = 0) ---
+      if ball["pos"].y - ball["radius"] <= 0:
+        ball["pos"].y = ball["radius"]
+        ball["vel"].y = -ball["vel"].y * bounce
 
-    # --- ОТСКОК ОТ ЛЕВОЙ СТЕНЫ (X = 0) ---
-    if circle_pos.x - circle_rad <= 0:
-      circle_pos.x = circle_rad
-      circle_vel.x = -circle_vel.x * bounce
+      # --- ОТСКОК ОТ ЛЕВОЙ СТЕНЫ (X = 0) ---
+      if ball["pos"].x - ball["radius"] <= 0:
+        ball["pos"].x = ball["radius"]
+        ball["vel"].x = -ball["vel"].x * bounce
 
-    # --- ОТСКОК ОТ ПРАВОЙ СТЕНЫ (X = width) ---
-    elif circle_pos.x + circle_rad >= width:
-      circle_pos.x = width - circle_rad
-      circle_vel.x = -circle_vel.x * bounce
-    # --- СКОРОСТЬ ШАРА ---
-    circle_speed_sqrt = circle_vel.x**2 + circle_vel.y**2
-    circle_speed = circle_speed_sqrt ** 0.5
+      # --- ОТСКОК ОТ ПРАВОЙ СТЕНЫ (X = width) ---
+      elif ball["pos"].x + ball["radius"] >= width:
+        ball["pos"].x = width - ball["radius"]
+        ball["vel"].x = -ball["vel"].x * bounce
+      # --- СКОРОСТЬ ШАРА ---
+      '''circle_speed_sqrt = ball["vel"].x**2 + ball["vel"].y**2
+      circle_speed = circle_speed_sqrt ** 0.5'''
 
   # 3. ОТРИСОВКА
   screen.fill((30, 30, 30))
@@ -163,11 +149,11 @@ while running:
         ball["color"] = (50, 50, 50)
     pygame.draw.circle(screen, ball["color"], ball["pos"], ball["radius"])
 
-  #pygame.draw.circle(screen, color, circle_pos, circle_rad)
+  #pygame.draw.circle(screen, color, ball["pos"], ball["radius"])
 
   
   pygame.draw.rect(screen, (10, 10, 10), (0, 700, 1000, 50))
-  print(circle_vel, f" --- speed: {circle_speed}", " "*20, end = "\r", flush=True)
+  #print(ball["vel"], f" --- speed: {circle_speed}", " "*20, end = "\r", flush=True)
   
 
   pygame.display.flip()
