@@ -1,4 +1,5 @@
 import sys, pygame
+from itertools import combinations
 
 def new_ball(pos, radius, mass):
     global ball_counter
@@ -17,6 +18,44 @@ def new_ball(pos, radius, mass):
 
     return name
 
+def collide_balls(ball1, ball2, bounce):
+  pos1 = ball1["pos"]
+  pos2 = ball2["pos"]
+  delta = pos2 - pos1
+  dist = delta.length()
+  min_dist = ball1["radius"] + ball2["radius"]
+
+  if dist >= min_dist:
+    return
+
+  if dist < 1e-8:
+    normal = pygame.Vector2(1, 0)
+    dist = 0
+  else:
+    normal = delta / dist
+
+  m1 = ball1["mass"]
+  m2 = ball2["mass"]
+
+  overlap = min_dist - dist
+  inv1 = 1 / m1
+  inv2 = 1 / m2
+  inv_sum = inv1 + inv2
+
+  ball1["pos"] -= normal * overlap * (inv1 / inv_sum)
+  ball2["pos"] -= normal * overlap * (inv2 / inv_sum)
+
+  relative_vel = ball2["vel"] - ball1["vel"]
+  vel_normal = relative_vel.dot(normal)
+
+  if vel_normal >= 0:
+    return
+
+  impulse = -(1+bounce) * vel_normal / inv_sum
+
+  ball1["vel"] -= normal * (impulse / m1)
+  ball2["vel"] -= normal * (impulse / m2)
+
 pygame.init()
 
 #---INIT---
@@ -34,7 +73,6 @@ bounce = 0.75  # Коэффициент упругости
 gravity = False
 ball_counter = 1
 # --- ИНТЕРФЕЙС И СОСТОЯНИЯ ---
-is_dragged = False
 prev_mouse_pos = pygame.Vector2(0, 0)
 GBut = pygame.Rect(795, 5, 200, 30)
 CBBut = pygame.Rect(795, 40, 200, 30)
@@ -52,17 +90,16 @@ balls = {"ball0":{"pos": pygame.Vector2(400, 300),
 #Main cycle
 running = True
 while running:
-  dt = clock.tick(FPS) / 1000.0
+  dt = clock.tick(FPS) / 1000.0 / 20
 
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       running = False
-
     elif event.type == pygame.MOUSEBUTTONDOWN: #нажатие ЛКМ
       if event.button == 1:
         mouse_pos = pygame.Vector2(pygame.mouse.get_pos()) #Записываем координаты мыши
 
-        for ball in balls.values():
+        for ball in balls.values(): #Для каждого шара проверяем касание с мышью
           if mouse_pos.distance_to(ball["pos"]) <= ball["radius"]:
             ball["color"] = (70, 70, 70)
             ball["is_dragged"] = True
@@ -79,21 +116,21 @@ while running:
     elif event.type == pygame.MOUSEBUTTONUP: #
       if event.button == 1:
 
-        for ball in balls.values():
+        for ball in balls.values(): #Для каждого шара проверяем касание с мышью
             if ball["is_dragged"]:
                 ball["is_dragged"] = False
                 mouse_pos = pygame.Vector2(event.pos)
                 if dt > 0:
                     ball["vel"] = (mouse_pos - prev_mouse_pos) / dt
 
-    elif event.type == pygame.MOUSEMOTION:
+    elif event.type == pygame.MOUSEMOTION: #Если мышь перемещена 
       for ball in balls.values():
         if ball["is_dragged"]:
           prev_mouse_pos = ball["pos"].copy()
           ball["pos"] = pygame.Vector2(event.pos)
 
-  # 2. ФИЗИКА И ЛОГИКА (Работает, пока шар не перетаскивают мышью)
-  for ball in balls.values():
+  # Физика шаров
+  for ball in balls.values(): # Для каждого шара
     if not ball["is_dragged"]:
       if gravity:
         ball["vel"].y += g * dt
@@ -124,7 +161,10 @@ while running:
       '''circle_speed_sqrt = ball["vel"].x**2 + ball["vel"].y**2
       circle_speed = circle_speed_sqrt ** 0.5'''
 
-  # 3. ОТРИСОВКА
+  for ball1, ball2 in  combinations(balls.values(), 2):
+    collide_balls(ball1, ball2, bounce)
+
+  # --- ОТРИСОВКА ---
   screen.fill((30, 30, 30))
 
   # Кнопка гравитации
@@ -134,7 +174,7 @@ while running:
   text_rect = text_surface.get_rect(center=GBut.center)
   screen.blit(text_surface, text_rect)
 
-  #Кнопка создания шара
+  # Кнопка создания шара
   pygame.draw.rect(screen, CBButCol, CBBut, 0, 15)
   CBBut_str = "CREATE BALL"
   text_surface_CBBut = font.render(CBBut_str, True, (255, 255, 255))
@@ -149,13 +189,7 @@ while running:
         ball["color"] = (50, 50, 50)
     pygame.draw.circle(screen, ball["color"], ball["pos"], ball["radius"])
 
-  #pygame.draw.circle(screen, color, ball["pos"], ball["radius"])
-
-  
-  pygame.draw.rect(screen, (10, 10, 10), (0, 700, 1000, 50))
-  #print(ball["vel"], f" --- speed: {circle_speed}", " "*20, end = "\r", flush=True)
-  
-
+  pygame.draw.rect(screen, (10, 10, 10), (0, 700, 1000, 50)) # Пол
   pygame.display.flip()
 
 pygame.quit()
