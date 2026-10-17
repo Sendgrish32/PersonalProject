@@ -43,7 +43,7 @@ def collide_balls(ball1, ball2, bounce):
   inv_sum = inv1 + inv2
 
   ball1["pos"] -= normal * overlap * (inv1 / inv_sum)
-  ball2["pos"] -= normal * overlap * (inv2 / inv_sum)
+  ball2["pos"] += normal * overlap * (inv2 / inv_sum)
 
   relative_vel = ball2["vel"] - ball1["vel"]
   vel_normal = relative_vel.dot(normal)
@@ -54,7 +54,7 @@ def collide_balls(ball1, ball2, bounce):
   impulse = -(1+bounce) * vel_normal / inv_sum
 
   ball1["vel"] -= normal * (impulse / m1)
-  ball2["vel"] -= normal * (impulse / m2)
+  ball2["vel"] += normal * (impulse / m2)
 
 pygame.init()
 
@@ -64,7 +64,7 @@ height = 750
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Physical Engine")
 clock = pygame.time.Clock()
-FPS = 60
+FPS = 500
 
 #---counts---
 font = pygame.font.SysFont("arial", 18, bold=True)
@@ -90,7 +90,8 @@ balls = {"ball0":{"pos": pygame.Vector2(400, 300),
 #Main cycle
 running = True
 while running:
-  dt = clock.tick(FPS) / 1000.0 / 20
+  dt = clock.tick(FPS) / 1000.0
+  print(1 / dt)
 
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
@@ -167,6 +168,14 @@ while running:
   # --- ОТРИСОВКА ---
   screen.fill((30, 30, 30))
 
+  # Шары
+  for ball in balls.values():
+    if ball["is_dragged"]:
+        ball["color"] = (70, 70, 70)
+    else:
+        ball["color"] = (50, 50, 50)
+    pygame.draw.circle(screen, ball["color"], ball["pos"], ball["radius"])
+
   # Кнопка гравитации
   pygame.draw.rect(screen, ButCol, GBut, 0, 15)
   text_str = "GRAVITY: ON" if gravity else "GRAVITY: OFF"
@@ -180,14 +189,6 @@ while running:
   text_surface_CBBut = font.render(CBBut_str, True, (255, 255, 255))
   text_rect_CBBut = text_surface_CBBut.get_rect(center=CBBut.center)
   screen.blit(text_surface_CBBut, text_rect_CBBut)
-
-  # Шары
-  for ball in balls.values():
-    if ball["is_dragged"]:
-        ball["color"] = (70, 70, 70)
-    else:
-        ball["color"] = (50, 50, 50)
-    pygame.draw.circle(screen, ball["color"], ball["pos"], ball["radius"])
 
   pygame.draw.rect(screen, (10, 10, 10), (0, 700, 1000, 50)) # Пол
   pygame.display.flip()
