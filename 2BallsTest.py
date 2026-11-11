@@ -19,42 +19,42 @@ def new_ball(pos, radius, mass):
     return name
 
 def collide_balls(ball1, ball2, bounce):
-  pos1 = ball1["pos"]
-  pos2 = ball2["pos"]
-  delta = pos2 - pos1
-  dist = delta.length()
-  min_dist = ball1["radius"] + ball2["radius"]
+  position1 = ball1["pos"]
+  position2 = ball2["pos"]
+  vector12 = position2 - position1 #Вектор, который соединяет центры оскружностей
+  distance = vector12.length() #Расстояние между центрми
+  min_distance = ball1["radius"] + ball2["radius"] #Минимальное расстояние между центрами
 
-  if dist >= min_dist:
+  if distance >= min_distance:
     return
 
-  if dist < 1e-8:
-    normal = pygame.Vector2(1, 0)
-    dist = 0
+  if distance < 1e-8: #Совпадение центров, нормаль неопределена
+    normal = pygame.Vector2(1, 0) #Задаем произвольную нормаль
+    distance = 0
   else:
-    normal = delta / dist
+    normal = vector12 / distance #Единичный вектор-нормаль
 
   m1 = ball1["mass"]
   m2 = ball2["mass"]
 
-  overlap = min_dist - dist
-  inv1 = 1 / m1
+  overlap = min_distance - distance #Длина отрезка, на который коружности зашли друг в друга
+  inv1 = 1 / m1 #Оптимизация кода (обратные массы)
   inv2 = 1 / m2
   inv_sum = inv1 + inv2
 
-  ball1["pos"] -= normal * overlap * (inv1 / inv_sum)
+  ball1["pos"] -= normal * overlap * (inv1 / inv_sum) #Сдвигаем окружности пропорционально их массам: Чем больше масса, тем меньше сдвиг
   ball2["pos"] += normal * overlap * (inv2 / inv_sum)
 
-  relative_vel = ball2["vel"] - ball1["vel"]
-  vel_normal = relative_vel.dot(normal)
+  relative_vel = ball2["vel"] - ball1["vel"] #Скорость второго шара относительно первого
+  vel_normal = relative_vel.dot(normal) #Проекция эток скорсти на нормаль
 
-  if vel_normal >= 0:
+  if vel_normal >= 0: #Шары разлетаются друг от друга
     return
 
-  impulse = -(1+bounce) * vel_normal / inv_sum
+  impulse = -(1+bounce) * vel_normal / inv_sum #Импульс
 
-  ball1["vel"] -= normal * (impulse / m1)
-  ball2["vel"] += normal * (impulse / m2)
+  ball1["vel"] -= normal * (impulse * inv1)
+  ball2["vel"] += normal * (impulse * inv2)
 
 pygame.init()
 
@@ -64,7 +64,7 @@ height = 750
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Physical Engine")
 clock = pygame.time.Clock()
-FPS = 500
+FPS = 120
 
 #---counts---
 font = pygame.font.SysFont("arial", 18, bold=True)
@@ -83,7 +83,7 @@ CBButCol = (100, 100, 100)
 balls = {"ball0":{"pos": pygame.Vector2(400, 300),
         "vel": pygame.Vector2(0, 0),
         "radius": 50,
-        "mass": 10,
+        "mass": 20,
         "color": (50, 50, 50),
         "is_dragged": False}}
 
@@ -91,7 +91,7 @@ balls = {"ball0":{"pos": pygame.Vector2(400, 300),
 running = True
 while running:
   dt = clock.tick(FPS) / 1000.0
-  print(1 / dt)
+  #print(1 / dt)
 
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
