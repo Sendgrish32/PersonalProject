@@ -217,7 +217,7 @@ while running:
         ball["color"] = (50, 50, 50)
     pygame.draw.circle(screen, ball["color"], ball["pos"], ball["radius"])
 
-  # Состояние меню
+  # Состояние меню.
   if not menu:
     ColButCol = (70, 70, 70)
     VelButCol = (70, 70, 70)
